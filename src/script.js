@@ -7,6 +7,7 @@ import bloomFragmentShader from './bloom/fragment.glsl'
 import bloomVertexShader from './bloom/vertex.glsl'
 import contrastFragmentShader from './contrast/fragment.glsl'
 import contrastVertexShader from './contrast/vertex.glsl'
+import { GLTFLoader } from 'three/examples/jsm/Addons.js'
 import { EffectComposer } from 'three/examples/jsm/Addons.js'
 import { ShaderPass } from 'three/examples/jsm/Addons.js'
 import { RenderPass } from 'three/examples/jsm/Addons.js'
@@ -21,6 +22,7 @@ debugObject.Offset = 0.003
 debugObject.Strength = 1.5
 debugObject.BlurStrength = 0.05
 debugObject.KernelSize = 3
+debugObject.UvRepetitions = 40;
 
 
 /**
@@ -30,6 +32,14 @@ const sizes = {
     width: window.innerWidth,
     height: window.innerHeight
 }
+
+const gltfLoader = new GLTFLoader()
+gltfLoader.load('./models/env.glb',
+    (model) => {
+        const mod = model.scene
+        // scene.add(mod)
+    }
+)
 
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
@@ -61,29 +71,11 @@ const shaderMaterial = new THREE.ShaderMaterial({
         uOffset: {value: debugObject.Offset},
         uResolution: {value: new THREE.Vector2(sizes.width, sizes.height)},
         uStrength: {value: debugObject.Strength},
-        uStitchTexture: {value: stitch}
+        uUvRepetitions: {value: debugObject.UvRepetitions}
         
     }
 })
 
-const bloomShader = new THREE.ShaderMaterial({
-    fragmentShader: bloomFragmentShader,
-    vertexShader: bloomVertexShader,
-    uniforms: {
-        tDiffuse: {value: null},
-        tDefTex: {value: null},
-        uBlurStrength: {value: debugObject.BlurStrength},
-        uKernelSize: {value: debugObject.KernelSize},
-    }
-})
-
-const contrastShader = new THREE.ShaderMaterial({
-    fragmentShader: contrastFragmentShader,
-    vertexShader: contrastVertexShader,
-    uniforms: {
-        tDiffuse : {value: null}
-    }
-})
 
 
 gui.add(debugObject, 'Offset').min(0).max(1.0).step(0.0001).onChange(() => {
@@ -92,11 +84,8 @@ gui.add(debugObject, 'Offset').min(0).max(1.0).step(0.0001).onChange(() => {
 gui.add(debugObject, 'Strength').min(1).max(10).step(0.001).onChange(() => {
     shaderMaterial.uniforms.uStrength.value = debugObject.Strength
 })
-gui.add(debugObject, 'BlurStrength').min(0).max(1).step(0.001).onChange(() => {
-    bloomShader.uniforms.uBlurStrength.value = debugObject.BlurStrength
-})
-gui.add(debugObject, 'KernelSize').min(1).max(10).step(1).onChange(() => {
-    bloomShader.uniforms.uKernelSize.value = debugObject.KernelSize
+gui.add(debugObject, 'UvRepetitions').min(1).max(100).step(1).onChange(() => {
+    shaderMaterial.uniforms.uUvRepetitions.value = debugObject.UvRepetitions
 })
 
 // Mesh
@@ -104,7 +93,7 @@ const plane = new THREE.Mesh(geometry, shaderMaterial)
 scene.add(plane)
 plane.position.set(0.0, 2.0, 0.0)
 
-const objectMaterial = new THREE.MeshBasicMaterial({
+const objectMaterial = new THREE.MeshStandardMaterial({
     // color: 'red'
 })
 const sphere = new THREE.Mesh(
@@ -135,7 +124,7 @@ directionalLight.position.set(3,5,6)
 directionalLight.lookAt(new THREE.Vector3(0, 0, 0))
 scene.add(directionalLight)
 
-const ambientLight = new THREE.AmbientLight('#ffffff', 0.3)
+const ambientLight = new THREE.AmbientLight('#ffffff', 0.7)
 scene.add(ambientLight)
 
 
@@ -163,7 +152,7 @@ window.addEventListener('resize', () =>
  */
 // Base camera
 const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
-camera.position.set(0, 0, 4)
+camera.position.set(0, 0, 2)
 scene.add(camera)
 
 // Controls
@@ -194,9 +183,6 @@ composer.addPass(renderPass)
 
 const shaderPass = new ShaderPass(shaderMaterial)
 
-const bloomPass = new ShaderPass(bloomShader)
-
-const contrastPass = new ShaderPass(contrastShader)
 
 composer.addPass(shaderPass)
 // composer.addPass(contrastPass)
@@ -217,19 +203,10 @@ const clock = new THREE.Clock()
 const tick = () =>
 {
     const elapsedTime = clock.getElapsedTime()
-    // scene.overrideMaterial = new THREE.MeshStandardMaterial()
-    // renderer.setRenderTarget(renderTarget)
-    // renderer.render(scene, camera)
-    
-    // shaderMaterial.uniforms.tDiffuse.value = renderTarget.texture
-    // // bloomPass.uniforms.tDefTex.value = renderTarget.texture
-    // scene.overrideMaterial = null
-    // renderer.setRenderTarget(null)
 
 
     // Update controls
     controls.update()
-    console.log(sizes.width, sizes.height);
 
     // Render
     

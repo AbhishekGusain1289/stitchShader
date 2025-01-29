@@ -4,14 +4,13 @@ uniform sampler2D tDiffuse;
 uniform sampler2D tNormalTexture;
 uniform sampler2D uStitchTexture;
 uniform float uUvRepetitions;
-uniform float uStichRepetitions;
 varying vec2 vUv;
 
 
 void main()
 {
     vec2 uv = gl_FragCoord.xy / uResolution.y;
-    float uUvRepetitions = 50.0;
+    // float uUvRepetitions = 50.0;
     
 
     float aspectRatio = uResolution.x / uResolution.y;
@@ -94,10 +93,10 @@ void main()
     result *= newUv.x < 0.1 ? 0.0 : result;
     result *= newUv.x < 0.9 ? result : 0.0;
 
-    result = step(0.5, result);
 
 
-    vec3 finalColor = step(vec3(0.5), Color * result);
+    vec3 finalColor = Color * result;
+    // finalColor = step(vec3(0.5), finalColor);
     gl_FragColor = vec4(result, result, result, 1.0);
     gl_FragColor = vec4(finalColor, 1.0);
 
